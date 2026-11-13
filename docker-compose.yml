@@ -1,0 +1,47 @@
+# Simula máquinas diferentes: um container por papel, cada um com IP fixo numa
+# rede própria. Os serviços anunciam o IP do próprio container no Bind.
+name: asr-grpc-sd          # nome de projeto próprio (não mexe em outros containers)
+
+x-app: &app
+  build: .
+  image: asr-grpc-sd:latest
+  depends_on: [nomes]
+
+services:
+  nomes:                   # serviço de nomes
+    build: .
+    image: asr-grpc-sd:latest
+    command: ["python", "SimpleNamingService.py", "--porta", "5678"]
+    networks: {rede_sd: {ipv4_address: 172.30.10.10}}
+
+  calculadora:             # serviço 1
+    <<: *app
+    command: ["python", "CalculadoraService.py"]
+    environment: {NS_HOST: 172.30.10.10, NS_PORT: "5678", PORTA: "50051", ANUNCIAR_IP: 172.30.10.20}
+    networks: {rede_sd: {ipv4_address: 172.30.10.20}}
+
+  calculadora2:            # outra "máquina" para onde a Calculadora migra (rebind)
+    <<: *app
+    profiles: [migracao]
+    command: ["python", "CalculadoraService.py"]
+    environment: {NS_HOST: 172.30.10.10, NS_PORT: "5678", PORTA: "50052", ANUNCIAR_IP: 172.30.10.21}
+    networks: {rede_sd: {ipv4_address: 172.30.10.21}}
+
+  texto:                   # serviço 2
+    <<: *app
+    command: ["python", "TextoService.py"]
+    environment: {NS_HOST: 172.30.10.10, NS_PORT: "5678", PORTA: "50061", ANUNCIAR_IP: 172.30.10.30}
+    networks: {rede_sd: {ipv4_address: 172.30.10.30}}
+
+  cliente:                 # conhece apenas o endereço do serviço de nomes
+    <<: *app
+    profiles: [cliente]
+    command: ["python", "cliente.py", "--demo", "--esperar-migracao", "60"]
+    environment: {NS_HOST: 172.30.10.10, NS_PORT: "5678"}
+    networks: {rede_sd: {ipv4_address: 172.30.10.40}}
+
+networks:
+  rede_sd:
+    ipam:
+      config:
+        - subnet: 172.30.10.0/24
