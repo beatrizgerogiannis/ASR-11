@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package calculadora;
+
+// Serviço 1: calculadora remota.
+// Div retorna erro gRPC INVALID_ARGUMENT quando o divisor é zero.
+service Calculadora {
+	rpc Add (OperandosMsg) returns (ResultadoMsg) {}
+	rpc Sub (OperandosMsg) returns (ResultadoMsg) {}
+	rpc Mul (OperandosMsg) returns (ResultadoMsg) {}
+	rpc Div (OperandosMsg) returns (ResultadoMsg) {}
+}
+
+message OperandosMsg {
+	double a = 1;
+	double b = 2;
+}
+
+message ResultadoMsg {
+	double valor = 1;
+	string expressao = 2;   // ex.: "7 / 2 = 3.5"
+	string servidor = 3;    // endereço anunciado de quem atendeu (útil para ver a migração)
+}
