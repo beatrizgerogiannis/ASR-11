@@ -1,0 +1,36 @@
+syntax = "proto3";
+
+package texto;
+
+// Serviço 2: processamento de texto remoto.
+service Texto {
+	rpc Upper (TextoMsg) returns (TextoMsg) {}
+	rpc Reverse (TextoMsg) returns (TextoMsg) {}
+	rpc CountWords (TextoMsg) returns (ContagemMsg) {}
+	rpc Analyze (TextoMsg) returns (AnaliseMsg) {}
+}
+
+message TextoMsg {
+	string texto = 1;
+}
+
+message ContagemMsg {
+	int32 palavras = 1;
+}
+
+message FrequenciaMsg {
+	string palavra = 1;
+	int32 ocorrencias = 2;
+}
+
+message AnaliseMsg {
+	int32 caracteres = 1;
+	int32 palavras = 2;
+	int32 linhas = 3;
+	int32 vogais = 4;
+	double tamanho_medio_palavra = 5;
+	string palavra_mais_longa = 6;
+	bool palindromo = 7;                     // ignorando espaços, pontuação e maiúsculas
+	repeated FrequenciaMsg mais_frequentes = 8;  // até 5 palavras, da mais frequente para a menos
+	string servidor = 9;
+}
